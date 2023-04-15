@@ -1,4 +1,4 @@
-![Banner](Images/Banner.png)
+<!-- ![Banner](Images/Banner.png) -->
 
 # Anthropic.NET
 
