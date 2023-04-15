@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Build">
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Package">
+    <Product>Anthropic.NET</Product>
+    <Description>Anthropic.NET .NET Developers access to Anthropic's safety-first langage model APIs</Description>
+    <PackageTags>Anthropic;Anthropic .NET SDK;Claude;Machine Learning;ML;AI;Artificial Intellegence;API;LLM</PackageTags>
+  </PropertyGroup>
+
+</Project>
