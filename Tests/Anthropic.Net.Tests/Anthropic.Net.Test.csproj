@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup Label="Project References">
-    <ProjectReference Include="..\..\Source\anthropic_net\anthropic_net.csproj" />
+    <ProjectReference Include="..\..\Source\Anthropic.Net\Anthropic.Net.csproj" />
   </ItemGroup>
 
 </Project>

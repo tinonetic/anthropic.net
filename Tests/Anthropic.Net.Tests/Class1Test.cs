@@ -1,6 +1,4 @@
-namespace anthropic_net.Test;
-
-using anthropic_net;
+namespace Anthropic.Net.Test;
 using Xunit;
 
 public class Class1Test

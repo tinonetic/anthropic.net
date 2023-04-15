@@ -1,4 +1,4 @@
-namespace anthropic_net;
+namespace Anthropic.Net;
 
 /// <summary>
 /// Some class.
