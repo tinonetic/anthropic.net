@@ -1,8 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup Label="Build">
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSubstitute" Version="5.0.0" />
+    <PackageReference Include="Shouldly" Version="4.2.0" />
+  </ItemGroup>
 
   <ItemGroup Label="Project References">
     <ProjectReference Include="..\..\Source\Anthropic.Net\Anthropic.Net.csproj" />
