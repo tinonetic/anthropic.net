@@ -73,9 +73,19 @@ public class ApiClient : IApiClient
     /// </remarks>
     public async Task<JsonElement> CompletionAsync(Dictionary<string, object> parameters)
     {
+        ValidateRequest(parameters);
+
         var response = await SendRequestAsync("POST", "/v1/complete", parameters).ConfigureAwait(true);
         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
         return JsonSerializer.Deserialize<JsonElement>(content);
+    }
+
+    private static void ValidateRequest(Dictionary<string, object> parameters)
+    {
+        if (!parameters.ContainsKey("prompt"))
+        {
+            throw new ValidationException("The prompt parameter is missing.");
+        }
     }
 
     private void InitializeHttpClient()
@@ -99,7 +109,7 @@ public class ApiClient : IApiClient
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-            throw new ApiException($"Request failed with status code {response.StatusCode}: {errorContent}");
+            throw new AnthropicApiException($"Request failed with status code {response.StatusCode}: {errorContent}");
         }
 
         return response;
