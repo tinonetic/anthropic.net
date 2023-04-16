@@ -7,7 +7,7 @@ using System.Text.Json;
 /// <summary>
 /// The Anthropic API client.
 /// </summary>
-public class ApiClient
+public class ApiClient : IApiClient
 {
     /// <summary>
     /// The injected HttpClient object to be used to make requests.
