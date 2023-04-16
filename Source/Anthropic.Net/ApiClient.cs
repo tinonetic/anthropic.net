@@ -19,7 +19,7 @@ public class ApiClient
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiClient"/> class.
     /// </summary>
-    /// <param name="httpClient">The HttpClient object used to make requests.</param>
+    /// <param name="httpClient">The HttpClient object used to make requests. HttpClient should be initialized with the API key and Base URL. See example.</param>
     /// <param name="apiBaseUrl">The Anthropic API Base URL.</param>
     /// <remarks>
     /// The <paramref name="httpClient"/> parameter is recommended to be injected via .NET dependency injection.
@@ -35,7 +35,7 @@ public class ApiClient
         }
 
         _apiBaseUrl = apiBaseUrl;
-        _httpClient.BaseAddress = new Uri(_apiBaseUrl);
+        InitializeHttpClient();
     }
 
     /// <summary>
@@ -59,9 +59,7 @@ public class ApiClient
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
         _apiKey = apiKey;
         _apiBaseUrl = apiBaseUrl;
-        _httpClient.BaseAddress = new Uri(_apiBaseUrl);
-        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
+        InitializeHttpClient();
     }
 
     /// <summary>
@@ -78,6 +76,13 @@ public class ApiClient
         var response = await SendRequestAsync("POST", "/v1/complete", parameters).ConfigureAwait(true);
         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
         return JsonSerializer.Deserialize<JsonElement>(content);
+    }
+
+    private void InitializeHttpClient()
+    {
+        _httpClient.BaseAddress = new Uri(_apiBaseUrl);
+        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
     }
 
     private async Task<HttpResponseMessage> SendRequestAsync(string method, string path, Dictionary<string, object> parameters)
