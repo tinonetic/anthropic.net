@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>AnthropicNetDemo</name>
+    </assembly>
+    <members>
+        <member name="T:AnthropicNetDemo.Program">
+            <summary>
+            Basic Demo console program that shows library usage.
+            </summary>
+        </member>
+        <member name="M:AnthropicNetDemo.Program.Main">
+            <summary>
+            Main entry method.
+            </summary>
+        </member>
+    </members>
+</doc>
