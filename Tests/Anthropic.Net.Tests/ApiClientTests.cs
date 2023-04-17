@@ -24,7 +24,7 @@ public class ApiClientTests
         {
             BaseAddress = _baseAddress,
         };
-        var sut = new ApiClient("test-api-key", httpClient);
+        var sut = new AnthropicApiClient(httpClient, "test-api-key");
 
         var validRequest1 = await sut.CompletionAsync(new Dictionary<string, object>
             {
