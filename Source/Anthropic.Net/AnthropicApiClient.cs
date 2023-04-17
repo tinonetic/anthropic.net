@@ -7,7 +7,7 @@ using System.Text.Json;
 /// <summary>
 /// The Anthropic API client.
 /// </summary>
-public class ApiClient : IApiClient
+public class AnthropicApiClient : IAnthropicApiClient
 {
     /// <summary>
     /// The injected HttpClient object to be used to make requests.
@@ -17,7 +17,7 @@ public class ApiClient : IApiClient
     private readonly string _apiBaseUrl;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ApiClient"/> class.
+    /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class.
     /// </summary>
     /// <param name="httpClient">The HttpClient object used to make requests. HttpClient should be initialized with the API key and Base URL. See example.</param>
     /// <param name="apiBaseUrl">The Anthropic API Base URL.</param>
@@ -26,7 +26,7 @@ public class ApiClient : IApiClient
     /// Avoid using use "new HttpClient()".
     /// For more information, look at the Examples from the <a href="https://github.com/tinonetic/anthropic.net">Anthropic.Net repository</a> and for details see <a href="https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests">Use IHttpClientFactory to implement resilient HTTP requests</a>.
     /// </remarks>
-    public ApiClient(HttpClient httpClient, string apiBaseUrl = "https://api.anthropic.com")
+    public AnthropicApiClient(HttpClient httpClient, string apiBaseUrl = "https://api.anthropic.com")
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
         if (_httpClient.BaseAddress == null)
@@ -39,17 +39,17 @@ public class ApiClient : IApiClient
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ApiClient"/> class.
+    /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class.
     /// </summary>
-    /// <param name="apiKey">The Anthropic API key.</param>
     /// <param name="httpClient">The HttpClient object used to make requests.</param>
+    /// <param name="apiKey">The Anthropic API key.</param>
     /// <param name="apiBaseUrl">The Anthropic API Base URL.</param>
     /// <remarks>
     /// The <paramref name="httpClient"/> parameter is recommended to be injected via .NET dependency injection.
     /// Avoid using use "new HttpClient()".
     /// For more information, look at the Examples from the <a href="https://github.com/tinonetic/anthropic.net">Anthropic.Net repository</a> and for details see <a href="https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests">Use IHttpClientFactory to implement resilient HTTP requests</a>.
     /// </remarks>
-    public ApiClient(string apiKey, HttpClient httpClient, string apiBaseUrl = "https://api.anthropic.com")
+    public AnthropicApiClient(HttpClient httpClient, string apiKey, string apiBaseUrl = "https://api.anthropic.com")
     {
         if (string.IsNullOrWhiteSpace(apiKey))
         {
