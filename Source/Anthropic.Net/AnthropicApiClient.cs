@@ -82,9 +82,11 @@ public class AnthropicApiClient : IAnthropicApiClient
         ValidateRequest(parameters);
 
         var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/v1/complete");
+        httpRequestMessage.Headers.Accept.Clear();
         httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         httpRequestMessage.Headers.Add("X-API-Key", _apiKey);
         httpRequestMessage.Content = new FormUrlEncodedContent(parameters.Select(x => new KeyValuePair<string, string>(x.Key, (string)x.Value)));
+        httpRequestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
         var httpClient = _httpClientFactory.CreateClient();
         var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(true);
