@@ -1,5 +1,6 @@
 namespace Anthropic.Net;
 
+using System.Net.Http;
 using System.Net.Http.Headers;
 
 using System.Text.Json;
@@ -10,56 +11,61 @@ using System.Text.Json;
 public class AnthropicApiClient : IAnthropicApiClient
 {
     /// <summary>
-    /// The injected HttpClient object to be used to make requests.
+    /// The injected HttpClientFactory objects object to be used to create the HttpClient.
     /// </summary>
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly string? _apiKey;
     private readonly string _apiBaseUrl;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class.
     /// </summary>
-    /// <param name="httpClient">The HttpClient object used to make requests. HttpClient should be initialized with the API key and Base URL. See example.</param>
+    /// <param name="apiKey">The Anthropic API key.</param>
     /// <param name="apiBaseUrl">The Anthropic API Base URL.</param>
+    /// <param name="httpClientFactory">
+    /// The HttpClientFactory object that creates the HttpClient used to make requests.
+    /// HttpClient should be initialized with the API key and Base URL. See example.
+    /// </param>
     /// <remarks>
-    /// The <paramref name="httpClient"/> parameter is recommended to be injected via .NET dependency injection.
+    /// The <paramref name="httpClientFactory"/> parameter is recommended to be injected via .NET dependency injection.
     /// Avoid using use "new HttpClient()".
     /// For more information, look at the Examples from the <a href="https://github.com/tinonetic/anthropic.net">Anthropic.Net repository</a> and for details see <a href="https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests">Use IHttpClientFactory to implement resilient HTTP requests</a>.
     /// </remarks>
-    public AnthropicApiClient(HttpClient httpClient, string apiBaseUrl = "https://api.anthropic.com")
+    public AnthropicApiClient(string apiKey, IHttpClientFactory httpClientFactory, string apiBaseUrl = "https://api.anthropic.com")
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
-        if (_httpClient.BaseAddress == null)
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
         {
-            throw new InvalidOperationException("Please assiggn the 'HttpClient.BaseAddress'");
+            throw new ArgumentNullException(nameof(apiBaseUrl), "Please assign the 'apiBaseUrl");
         }
 
+        _apiKey = apiKey;
         _apiBaseUrl = apiBaseUrl;
-        InitializeHttpClient();
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class.
     /// </summary>
-    /// <param name="httpClient">The HttpClient object used to make requests.</param>
     /// <param name="apiKey">The Anthropic API key.</param>
-    /// <param name="apiBaseUrl">The Anthropic API Base URL.</param>
+    /// <param name="httpClientFactory">
+    /// The HttpClientFactory object that creates the HttpClient used to make requests.
+    /// HttpClient should be initialized with the API key and Base URL. See example.
+    /// </param>
     /// <remarks>
-    /// The <paramref name="httpClient"/> parameter is recommended to be injected via .NET dependency injection.
+    /// The <paramref name="httpClientFactory"/> parameter is recommended to be injected via .NET dependency injection.
     /// Avoid using use "new HttpClient()".
     /// For more information, look at the Examples from the <a href="https://github.com/tinonetic/anthropic.net">Anthropic.Net repository</a> and for details see <a href="https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests">Use IHttpClientFactory to implement resilient HTTP requests</a>.
     /// </remarks>
-    public AnthropicApiClient(HttpClient httpClient, string apiKey, string apiBaseUrl = "https://api.anthropic.com")
+    public AnthropicApiClient(string apiKey, IHttpClientFactory httpClientFactory)
     {
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new ArgumentNullException(nameof(apiKey), "Please provide the Anthropic API key. See the API Reference for details: https://console.anthropic.com/docs/api/reference");
         }
 
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
         _apiKey = apiKey;
-        _apiBaseUrl = apiBaseUrl;
-        InitializeHttpClient();
+        _apiBaseUrl = "https://api.anthropic.com";
     }
 
     /// <summary>
@@ -75,9 +81,22 @@ public class AnthropicApiClient : IAnthropicApiClient
     {
         ValidateRequest(parameters);
 
-        var response = await SendRequestAsync("POST", "/v1/complete", parameters).ConfigureAwait(true);
-        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-        return JsonSerializer.Deserialize<JsonElement>(content);
+        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/v1/complete");
+        httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        httpRequestMessage.Headers.Add("X-API-Key", _apiKey);
+        httpRequestMessage.Content = new FormUrlEncodedContent(parameters.Select(x => new KeyValuePair<string, string>(x.Key, (string)x.Value)));
+
+        var httpClient = _httpClientFactory.CreateClient();
+        var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(true);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+            throw new AnthropicApiException($"Request failed with status code {response.StatusCode}: {errorContent}");
+        }
+
+        var json = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+        return JsonSerializer.Deserialize<JsonElement>(json);
     }
 
     private static void ValidateRequest(Dictionary<string, object> parameters)
@@ -86,32 +105,5 @@ public class AnthropicApiClient : IAnthropicApiClient
         {
             throw new ValidationException("The prompt parameter is missing.");
         }
-    }
-
-    private void InitializeHttpClient()
-    {
-        _httpClient.BaseAddress = new Uri(_apiBaseUrl);
-        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
-    }
-
-    private async Task<HttpResponseMessage> SendRequestAsync(string method, string path, Dictionary<string, object> parameters)
-    {
-        var request = new HttpRequestMessage(new HttpMethod(method), path);
-
-        if (parameters != null)
-        {
-            request.Content = new StringContent(JsonSerializer.Serialize(parameters));
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        }
-
-        var response = await _httpClient.SendAsync(request).ConfigureAwait(true);
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-            throw new AnthropicApiException($"Request failed with status code {response.StatusCode}: {errorContent}");
-        }
-
-        return response;
     }
 }
