@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// The Anthropic API client interface.
 /// </summary>
-internal interface IApiClient
+internal interface IAnthropicApiClient
 {
     /// <summary>
     /// Base method for sending a prompt to Claude for completion.
