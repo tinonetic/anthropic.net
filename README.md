@@ -5,5 +5,5 @@
 [![GitHub Actions Build History](https://buildstats.info/github/chart/tinonetic/anthropic.net?branch=main&includeBuildsFromPullRequest=false)](https://github.com/tinonetic/anthropic.net/actions)
 
 
-Anthropic.NET is a .NET SDK that gives you access to Anthropic's safety-first langage model APIs
+Anthropic.NET is community-written a .NET SDK that gives you access to Anthropic's safety-first langage model APIs
 
