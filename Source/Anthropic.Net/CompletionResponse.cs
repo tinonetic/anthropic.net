@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 /// <summary>
 /// Represents a response from the Anthropic API for a text completion request.
 /// </summary>
-public class CompleteResponse
+public class CompletionResponse
 {
     /// <summary>
     /// Gets or sets the resulting completion up to and excluding the stop sequences.
