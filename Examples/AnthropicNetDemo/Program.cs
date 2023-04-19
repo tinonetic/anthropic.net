@@ -2,6 +2,7 @@ namespace AnthropicNetDemo;
 
 using System.Threading.Tasks;
 using Anthropic.Net;
+using Anthropic.Net.Constants;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -62,14 +63,26 @@ internal sealed class Program
                 services.AddTransient(cxt =>
                     {
                         // Anthropic-related code
-                        var apiKey = config.GetSection("Anthropic:ApiKey").Value ?? "MISSING KEY";
+                        // Remember to CREATE and SET you API Key first
+                        var apiKey = config.GetSection("Anthropic:ApiKey").Value ?? throw new InvalidOperationException("Missing API Key. Please see C# comments/docs on how define it in your \"Anthropic: ApiKey\".");
                         var clientFactory = cxt.GetRequiredService<IHttpClientFactory>();
                         return new AnthropicApiClient(apiKey, clientFactory);
                     });
             }).UseConsoleLifetime().Build();
 
         var anthropicApiClient = host.Services.GetRequiredService<AnthropicApiClient>();
-        var respost = await anthropicApiClient.CompletionAsync(new Dictionary<string, object> { { "prompt", "What is the history behind Hello World?" } });
-        Console.WriteLine("Hello, World!");
+
+        // 'Hello World' using Claude
+        Console.WriteLine("Asking Claude how to make it say 'Hello World'...");
+        var question = "How do I make you print 'Hello World?'?";
+        Console.WriteLine();
+        Console.WriteLine("Question:" + question);
+
+        // Sending the question & retrieving the response
+        var completionRequest = new CompletionRequest(question, AnthropicModels.Claude_v1);
+        var completionResponse = await anthropicApiClient.CompletionAsync(completionRequest);
+
+        Console.WriteLine("Answer:" + completionResponse.Completion);
+        Console.WriteLine();
     }
 }

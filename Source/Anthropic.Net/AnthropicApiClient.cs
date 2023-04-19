@@ -2,7 +2,7 @@ namespace Anthropic.Net;
 
 using System.Net.Http;
 using System.Net.Http.Headers;
-
+using System.Text;
 using System.Text.Json;
 
 /// <summary>
@@ -69,43 +69,102 @@ public class AnthropicApiClient : IAnthropicApiClient
     }
 
     /// <summary>
-    /// Base method for sending a prompt to Claude for completion.
+    /// Sends a prompt to the Anthropic API for completion.
     /// </summary>
-    /// <param name="parameters">A dictionary of parameters to include in the request, according to the reference.</param>
-    /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
-    /// <remarks>
-    /// The <paramref name="parameters"/> parameter should be a relative URL that will be combined with the base API URL.
-    /// For more information, see the <a href="https://console.anthropic.com/docs/api/reference">Anthropic API Reference</a>.
-    /// </remarks>
-    public async Task<JsonElement> CompletionAsync(Dictionary<string, object> parameters)
+    /// <param name="request">The <see cref="CompletionRequest"/> object representing the request parameters.</param>
+    /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation. The result is a <see cref="CompletionResponse"/> object representing the response from the API.</returns>
+    /// <exception cref="AnthropicApiException">Thrown if the API request fails or the API response cannot be deserialized.</exception>
+    public async Task<CompletionResponse> CompletionAsync(CompletionRequest request)
     {
-        ValidateRequest(parameters);
+        // Validate
+        ValidateRequest(request);
 
+        // Create an HTTP request message with the API endpoint URL and HTTP method
         var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/v1/complete");
+
+        // Set the Accept and X-API-Key headers for the API request
         httpRequestMessage.Headers.Accept.Clear();
         httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         httpRequestMessage.Headers.Add("X-API-Key", _apiKey);
-        httpRequestMessage.Content = new FormUrlEncodedContent(parameters.Select(x => new KeyValuePair<string, string>(x.Key, (string)x.Value)));
-        httpRequestMessage.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
+        // Serialize the CompleteRequest object to JSON and set it as the request body
+        var jsonPayload = JsonSerializer.Serialize(request);
+        httpRequestMessage.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+        // Send the API request and get the response
         var httpClient = _httpClientFactory.CreateClient();
         var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(true);
 
+        // Check if the API request was successful
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
             throw new AnthropicApiException($"Request failed with status code {response.StatusCode}: {errorContent}");
         }
 
+        // Deserialize the API response JSON into a CompleteResponse object
         var json = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-        return JsonSerializer.Deserialize<JsonElement>(json);
+        CompletionResponse? result;
+        try
+        {
+            result = JsonSerializer.Deserialize<CompletionResponse>(json);
+        }
+        catch (JsonException ex)
+        {
+            // Throw an exception if deserialization fails
+            throw new AnthropicApiException("Error deserializing API response.", ex);
+        }
+
+        // Throw an exception if the API response is null
+        if (result == null)
+        {
+            throw new AnthropicApiException("API response was null.");
+        }
+
+        // Return the CompleteResponse object
+        return result;
     }
 
-    private static void ValidateRequest(Dictionary<string, object> parameters)
+    /// <summary>
+    /// Validates that the specified request parameters are valid according to the CompleteRequest specification.
+    /// </summary>
+    /// <param name="request">The CompleteRequest object to validate.</param>
+    /// <exception cref="ArgumentException">Thrown if any of the required parameters are missing or invalid.</exception>
+    private static void ValidateRequest(CompletionRequest request)
     {
-        if (!parameters.ContainsKey("prompt"))
+        if (string.IsNullOrWhiteSpace(request.Prompt))
         {
-            throw new ValidationException("The prompt parameter is missing.");
+            throw new ArgumentException("The 'request.Prompt' parameter is required.", nameof(request));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Model))
+        {
+            throw new ArgumentException("The 'request.Model' parameter is required.", nameof(request));
+        }
+
+        if (request.MaxTokensToSample <= 0)
+        {
+            throw new ArgumentException("The 'request.MaxTokensToSample' parameter must be greater than zero.", nameof(request));
+        }
+
+        if (request.StopSequences == null || request.StopSequences.Count == 0)
+        {
+            throw new ArgumentException("The 'request.StopSequences' parameter must contain at least one stop sequence.", nameof(request));
+        }
+
+        if (request.Temperature is < 0 or > 1)
+        {
+            throw new ArgumentException("The 'request.Temperature' parameter must be between 0 and 1, inclusive.", nameof(request));
+        }
+
+        if (request.TopK < -1)
+        {
+            throw new ArgumentException("The 'request.TopK' parameter must be greater than or equal to -1.", nameof(request));
+        }
+
+        if (request.TopP is < -1 or > 1)
+        {
+            throw new ArgumentException("The 'request.TopP' parameter must be between -1 and 1, inclusive.", nameof(request));
         }
     }
 }
