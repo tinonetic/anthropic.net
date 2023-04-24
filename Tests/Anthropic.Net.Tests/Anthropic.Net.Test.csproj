@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="NSubstitute" Version="5.0.0" />
-    <PackageReference Include="Shouldly" Version="4.2.0" />
+    <PackageReference Include="Shouldly" Version="4.2.1" />
   </ItemGroup>
 
   <ItemGroup Label="Project References">
