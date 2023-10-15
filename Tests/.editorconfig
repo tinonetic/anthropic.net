@@ -38,3 +38,10 @@ dotnet_diagnostic.CA1062.severity = none
 # Justification: Test method names contain underscores
 # https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1707
 dotnet_diagnostic.CA1707.severity = none
+
+[*.{cs,vb}]
+# IDE0005: Remove unnecessary using directives
+# Justification: Causing build and unit test errors. Known issue with latest SDK
+# https://github.com/dotnet/aspnetcore/issues/47932
+# https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/ide0005
+dotnet_diagnostic.IDE0005.severity = none
