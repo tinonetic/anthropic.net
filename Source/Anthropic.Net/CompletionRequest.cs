@@ -6,6 +6,7 @@ using Anthropic.Net.Constants;
 /// <summary>
 /// Represents a request to complete text using the Anthropic API.
 /// </summary>
+[Obsolete("This class is for the legacy Completions API. Prefer using MessagesRequest with the Messages API.")]
 public class CompletionRequest
 {
     /// <summary>

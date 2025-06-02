@@ -20,14 +20,10 @@ public class ApiClientTests
     {
         var mockJsonResponse = "{}";
         var messageHandler = new MockHttpMessageHandler(mockJsonResponse, HttpStatusCode.OK);
-        var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        _ = httpClientFactory.CreateClient().Returns(
-            new HttpClient(messageHandler)
-            {
-                BaseAddress = _baseAddress,
-            });
-
-        var sut = new AnthropicApiClient("test-api-key", httpClientFactory);
+        
+        // The IHttpClientFactory is no longer injected for public constructors.
+        // We use the internal constructor for testing that accepts a HttpMessageHandler.
+        var sut = new AnthropicApiClient("test-api-key", messageHandler, _baseAddress.ToString());
         var userQuestion = "How do I make you print 'Hello World?'?";
         var response = await sut.CompletionAsync(new CompletionRequest(userQuestion, AnthropicModels.Claude_v1))
             .ConfigureAwait(true);
