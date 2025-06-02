@@ -3,6 +3,7 @@ namespace AnthropicNetDemo;
 using System.Threading.Tasks;
 using Anthropic.Net;
 using Anthropic.Net.Constants;
+using Anthropic.Net.Models.Messages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,7 +53,7 @@ internal sealed class Program
         // Boiler plate code
         var config = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddUserSecrets<Program>()
+            .AddUserSecrets()
             .Build();
 
         var host = new HostBuilder()
@@ -72,17 +73,23 @@ internal sealed class Program
 
         var anthropicApiClient = host.Services.GetRequiredService<AnthropicApiClient>();
 
-        // 'Hello World' using Claude
-        Console.WriteLine("Asking Claude how to make it say 'Hello World'...");
+        // 'Hello World' using Claude 3 with Messages API
+        Console.WriteLine("Asking Claude 3 how to make it say 'Hello World'...");
         var question = "How do I make you print 'Hello World?'?";
         Console.WriteLine();
         Console.WriteLine("Question:" + question);
 
-        // Sending the question & retrieving the response
-        var completionRequest = new CompletionRequest(question, AnthropicModels.Claude_v1);
-        var completionResponse = await anthropicApiClient.CompletionAsync(completionRequest);
+        // Sending the question & retrieving the response using Messages API
+        var messages = new List<Message> { Message.FromUser(question) };
+        var messageRequest = new MessageRequest(AnthropicModels.Claude_3_Sonnet, messages);
+        var messageResponse = await anthropicApiClient.MessageAsync(messageRequest);
 
-        Console.WriteLine("Answer:" + completionResponse.Completion);
+        // Extract text from the response
+        var responseText = string.Join("\n", messageResponse.Content
+            .Where(c => c.Type == "text")
+            .Select(c => ((TextContentBlock)c).Text));
+
+        Console.WriteLine("Answer:" + responseText);
         Console.WriteLine();
     }
 }
