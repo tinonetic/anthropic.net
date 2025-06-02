@@ -305,7 +305,7 @@ public class AnthropicApiClient : IAnthropicApiClient
             using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false); // For .NET 6+ ReadAsStreamAsync(cancellationToken)
             using var reader = new StreamReader(stream, Encoding.UTF8);
 
-            string currentEventType = null;
+            string? currentEventType = null;
             StringBuilder currentEventData = new StringBuilder();
 
             while (!reader.EndOfStream)
