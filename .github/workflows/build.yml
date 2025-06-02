@@ -49,8 +49,8 @@ jobs:
       - name: "Dotnet Cake Pack"
         run: dotnet cake --target=Pack
         shell: pwsh
-      - name: "Publish Artefacts"
-        uses: actions/upload-artifact@v3.1.0
+      - name: publish-artefacts-${{ matrix.runs-on }}
+        uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.os}}
           path: "./Artefacts"
@@ -67,9 +67,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: "Download Artefact"
-        uses: actions/download-artifact@v3.0.0
+        uses: actions/download-artifact@v4
         with:
-          name: "windows-latest"
+          path: "windows-latest"
+          pattern: publish-artefacts-*
+          merge-multiple: true
       - name: "Dotnet NuGet Add Source"
         run: dotnet nuget add source https://nuget.pkg.github.com/tinonetic/index.json --name GitHub --username tinonetic --password ${{secrets.GITHUB_TOKEN}}
         shell: pwsh
@@ -87,9 +89,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: "Download Artefact"
-        uses: actions/download-artifact@v3.0.0
+        uses: actions/download-artifact@v4
         with:
           name: "windows-latest"
+          pattern: publish-artefacts-*
+          merge-multiple: true
       - name: "Dotnet NuGet Push"
         run: |
           Get-ChildItem .\ -Filter *.nupkg |
