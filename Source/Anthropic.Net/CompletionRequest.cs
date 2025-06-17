@@ -36,7 +36,7 @@ public class CompletionRequest
     /// Gets the prompt you want Claude to complete.
     /// </summary>
     [JsonPropertyName("prompt")]
-    public string Prompt => $"\\n\\n{AnthropicSignals.HumanSignal}{UserQuestion}{AnthropicSignals.HumanSignal}";
+    public string Prompt => $"{AnthropicSignals.HumanSignal}{UserQuestion}{AnthropicSignals.AssistantSignal}";
 
     /// <summary>
     /// Gets or sets the version of Claude to use for the request.

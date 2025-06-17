@@ -5,7 +5,7 @@ using Anthropic.Net.Models.Messages;
 /// <summary>
 /// The Anthropic API client interface.
 /// </summary>
-internal interface IAnthropicApiClient
+public interface IAnthropicApiClient
 {
     /// <summary>
     /// Sends a prompt to the Anthropic API for completion.
