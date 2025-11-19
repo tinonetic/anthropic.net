@@ -53,7 +53,7 @@ internal sealed class Program
         // Boiler plate code
         var config = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddUserSecrets()
+            .AddUserSecrets<Program>()
             .Build();
 
         var host = new HostBuilder()
@@ -81,7 +81,7 @@ internal sealed class Program
 
         // Sending the question & retrieving the response using Messages API
         var messages = new List<Message> { Message.FromUser(question) };
-        var messageRequest = new MessageRequest(AnthropicModels.Claude_3_Sonnet, messages);
+        var messageRequest = new MessageRequest(AnthropicModels.Claude3Sonnet, messages);
         var messageResponse = await anthropicApiClient.MessageAsync(messageRequest);
 
         // Extract text from the response

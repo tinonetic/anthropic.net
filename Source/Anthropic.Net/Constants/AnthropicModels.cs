@@ -44,20 +44,20 @@ public static class AnthropicModels
     /// <summary>
     /// Claude 3 Haiku - Fastest and most compact model in the Claude 3 family.
     /// </summary>
-    public const string Claude_3_Haiku = "claude-3-haiku-20240307";
+    public const string Claude3Haiku = "claude-3-haiku-20240307";
 
     /// <summary>
     /// Claude 3 Sonnet - Balanced model for a wide range of tasks.
     /// </summary>
-    public const string Claude_3_Sonnet = "claude-3-sonnet-20240229";
+    public const string Claude3Sonnet = "claude-3-sonnet-20240229";
 
     /// <summary>
     /// Claude 3 Opus - Most powerful model in the Claude 3 family.
     /// </summary>
-    public const string Claude_3_Opus = "claude-3-opus-20240229";
+    public const string Claude3Opus = "claude-3-opus-20240229";
 
     /// <summary>
     /// Claude 3.5 Sonnet - Latest model with improved capabilities.
     /// </summary>
-    public const string Claude_3_5_Sonnet = "claude-3-5-sonnet-20241022";
+    public const string Claude35Sonnet = "claude-3-5-sonnet-20241022";
 }

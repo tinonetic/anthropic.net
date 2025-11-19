@@ -5,6 +5,9 @@ using System.Text.Json.Serialization;
 /// <summary>
 /// Base class for content blocks in messages.
 /// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(TextContentBlock), typeDiscriminator: "text")]
+[JsonDerivedType(typeof(ImageContentBlock), typeDiscriminator: "image")]
 public abstract class ContentBlock
 {
     /// <summary>
