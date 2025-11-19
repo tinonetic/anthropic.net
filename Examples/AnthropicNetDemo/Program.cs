@@ -53,7 +53,7 @@ internal sealed class Program
         // Boiler plate code
         var config = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddUserSecrets()
+            .AddUserSecrets<Program>()
             .Build();
 
         var host = new HostBuilder()
