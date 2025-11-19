@@ -1,4 +1,5 @@
 namespace Anthropic.Net;
+
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Anthropic.Net.Constants;
