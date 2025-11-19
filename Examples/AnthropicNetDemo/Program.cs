@@ -1,95 +1,198 @@
-namespace AnthropicNetDemo;
-
-using System.Threading.Tasks;
 using Anthropic.Net;
 using Anthropic.Net.Constants;
 using Anthropic.Net.Models.Messages;
+using Anthropic.Net.Models.Messages.Streaming;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Spectre.Console;
+using System.Text;
 
-// To run the demo
-// 1. Go to https://console.anthropic.com/account/keys
-// 2. Click "Create Key"
-// 3. Copy API key to somewhere temporary
-// 4. Go to your project's root directory
-// 5. Open your CLI/terminal to save as dotnet secret - RECOMMENDED
-// 6. Enable secret storage by running the following in the root directory:
-//
-//      dotnet user-secrets init
-//
-// 5. EDIT and PASTE the following with your copied API Key. Press ENTER to save it. :
-//
-//      dotnet user-secrets set "Anthropic:ApiKey" "YOUR-ANTHROPIC-API-KEY-FROM-ABOVE"
-//
-// 6. ALTERNATIVELY, have the key in your appsettings.json file with the following structure
-//
-//    {
-//      "Anthropic": {
-//          "ApiKey": "YOUR-ANTHROPIC-API-KEY-FROM-ABOVE"
-//      }
-//    }
-//
-//    THEN modify Config builder to use appsettings.json:
-//
-//      var config = new ConfigurationBuilder()
-//           .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-//           .AddJsonFile("appsettings.json")
-//           .AddUserSecrets<Program>()
-//           .Build();
-//
-// 7. Run the demo
+namespace AnthropicNetDemo;
 
-/// <summary>
-/// Basic Demo console program that shows library usage.
-/// </summary>
-internal sealed class Program
+class Program
 {
-    /// <summary>
-    /// Main entry method.
-    /// </summary>
-    public static async Task Main()
+    static async Task Main(string[] args)
     {
-        // Boiler plate code
-        var config = new ConfigurationBuilder()
-            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddUserSecrets<Program>()
-            .Build();
+        // 1. Setup Configuration (User Secrets)
+        var builder = Host.CreateApplicationBuilder(args);
+        builder.Configuration.AddUserSecrets<Program>();
+        var apiKey = builder.Configuration["Anthropic:ApiKey"]; // Changed to match typical user secrets structure
 
-        var host = new HostBuilder()
-            .ConfigureServices((context, services) =>
+        // 2. Setup Spectre.Console
+        AnsiConsole.Write(
+            new FigletText("Anthropic.Net")
+                .LeftJustified()
+                .Color(Color.Teal));
+        AnsiConsole.MarkupLine("[bold teal]v2.0 Demo Application[/]");
+        AnsiConsole.WriteLine();
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            apiKey = AnsiConsole.Prompt(
+                new TextPrompt<string>("Please enter your [green]Anthropic API Key[/]:")
+                    .Secret());
+        }
+
+        // 3. Initialize Client
+        using var client = new AnthropicApiClient(apiKey);
+
+        // 4. Main Menu Loop
+        while (true)
+        {
+            var choice = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Select a demo:")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "Chat (Interactive)",
+                        "Streaming Demo",
+                        "Tools Demo (Weather)",
+                        "Vision Demo (Image Analysis)",
+                        "Exit"
+                    }));
+
+            switch (choice)
             {
-                services.AddHttpClient();
+                case "Chat (Interactive)":
+                    await RunChatAsync(client);
+                    break;
+                case "Streaming Demo":
+                    await RunStreamingAsync(client);
+                    break;
+                case "Tools Demo (Weather)":
+                    await RunToolsAsync(client);
+                    break;
+                case "Vision Demo (Image Analysis)":
+                    await RunVisionAsync(client);
+                    break;
+                case "Exit":
+                    return;
+            }
 
-                services.AddTransient(cxt =>
-                    {
-                        // Anthropic-related code
-                        // Remember to CREATE and SET you API Key first
-                        var apiKey = config.GetSection("Anthropic:ApiKey").Value ?? throw new InvalidOperationException("Missing API Key. Please see C# comments/docs on how define it in your \"Anthropic: ApiKey\".");
-                        var clientFactory = cxt.GetRequiredService<IHttpClientFactory>();
-                        return new AnthropicApiClient(apiKey, clientFactory);
-                    });
-            }).UseConsoleLifetime().Build();
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[grey]Press any key to return to menu...[/]");
+            Console.ReadKey(true);
+            AnsiConsole.Clear();
+            AnsiConsole.Write(
+                new FigletText("Anthropic.Net")
+                    .LeftJustified()
+                    .Color(Color.Teal));
+        }
+    }
 
-        var anthropicApiClient = host.Services.GetRequiredService<AnthropicApiClient>();
+    static async Task RunChatAsync(AnthropicApiClient client)
+    {
+        AnsiConsole.MarkupLine("[bold yellow]--- Interactive Chat ---[/]");
+        var messages = new List<Message>();
 
-        // 'Hello World' using Claude 3 with Messages API
-        Console.WriteLine("Asking Claude 3 how to make it say 'Hello World'...");
-        var question = "How do I make you print 'Hello World?'?";
-        Console.WriteLine();
-        Console.WriteLine("Question:" + question);
+        while (true)
+        {
+            var input = AnsiConsole.Ask<string>("[green]You:[/]");
+            if (input.ToLower() == "exit") break;
 
-        // Sending the question & retrieving the response using Messages API
-        var messages = new List<Message> { Message.FromUser(question) };
-        var messageRequest = new MessageRequest(AnthropicModels.Claude3Sonnet, messages);
-        var messageResponse = await anthropicApiClient.MessageAsync(messageRequest);
+            messages.Add(Message.FromUser(input));
 
-        // Extract text from the response
-        var responseText = string.Join("\n", messageResponse.Content
-            .Where(c => c.Type == "text")
-            .Select(c => ((TextContentBlock)c).Text));
+            await AnsiConsole.Status()
+                .StartAsync("Thinking...", async ctx =>
+                {
+                    var request = new MessageRequest(AnthropicModels.Claude3Sonnet, messages);
+                    var response = await client.MessageAsync(request);
+                    
+                    var responseText = response.Content.OfType<TextContentBlock>().First().Text;
+                    AnsiConsole.MarkupLine($"[blue]Claude:[/] {responseText}");
+                    messages.Add(Message.FromAssistant(responseText));
+                });
+        }
+    }
 
-        Console.WriteLine("Answer:" + responseText);
-        Console.WriteLine();
+    static async Task RunStreamingAsync(AnthropicApiClient client)
+    {
+        AnsiConsole.MarkupLine("[bold yellow]--- Streaming Demo ---[/]");
+        var input = AnsiConsole.Ask<string>("[green]Enter a prompt for streaming:[/]");
+        
+        var request = new MessageRequest(AnthropicModels.Claude3Sonnet, [Message.FromUser(input)]);
+        
+        AnsiConsole.Markup("[blue]Claude:[/] ");
+        await foreach (var evt in client.StreamMessageAsync(request))
+        {
+            if (evt is ContentBlockDeltaEvent delta && delta.Delta.Type == "text_delta" && !string.IsNullOrEmpty(delta.Delta.Text))
+            {
+                AnsiConsole.Write(delta.Delta.Text);
+            }
+        }
+        AnsiConsole.WriteLine();
+    }
+
+    static async Task RunToolsAsync(AnthropicApiClient client)
+    {
+        AnsiConsole.MarkupLine("[bold yellow]--- Tools Demo ---[/]");
+        
+        var tool = new Tool("get_weather", "Get weather for a location", new
+        {
+            type = "object",
+            properties = new
+            {
+                location = new { type = "string", description = "City name" }
+            },
+            required = new[] { "location" }
+        });
+
+        var messages = new List<Message> { Message.FromUser("What is the weather in San Francisco?") };
+        var request = new MessageRequest(AnthropicModels.Claude3Sonnet, messages)
+        {
+            Tools = [tool]
+        };
+
+        var userContent = (List<ContentBlock>)messages[0].Content;
+        AnsiConsole.MarkupLine($"[green]User:[/] {userContent.OfType<TextContentBlock>().First().Text}");
+        
+        var response = await client.MessageAsync(request);
+        
+        if (response.StopReason == "tool_use")
+        {
+            var toolUse = response.Content.OfType<ToolUseContentBlock>().First();
+            AnsiConsole.MarkupLine($"[yellow]Tool Use Requested:[/] {toolUse.Name}");
+            AnsiConsole.MarkupLine($"[yellow]Input:[/] {System.Text.Json.JsonSerializer.Serialize(toolUse.Input)}");
+            
+            // Simulate tool execution
+            var result = "The weather in San Francisco is 65 degrees and sunny.";
+            AnsiConsole.MarkupLine($"[cyan]Tool Result:[/] {result}");
+
+            messages.Add(new Message("assistant", response.Content));
+            messages.Add(new Message("user", new List<ContentBlock> { new ToolResultContentBlock(toolUse.Id, result) }));
+
+            var followUpRequest = new MessageRequest(AnthropicModels.Claude3Sonnet, messages) { Tools = [tool] };
+            var followUpResponse = await client.MessageAsync(followUpRequest);
+            
+            var finalText = followUpResponse.Content.OfType<TextContentBlock>().First().Text;
+            AnsiConsole.MarkupLine($"[blue]Claude:[/] {finalText}");
+        }
+    }
+
+    static async Task RunVisionAsync(AnthropicApiClient client)
+    {
+        AnsiConsole.MarkupLine("[bold yellow]--- Vision Demo ---[/]");
+        AnsiConsole.MarkupLine("Analyzing a sample image (1x1 pixel red dot for demo purposes)...");
+
+        // Create a simple 1x1 red pixel PNG base64
+        var redDotBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+        var imageBytes = Convert.FromBase64String(redDotBase64);
+        
+        var imageBlock = ImageContentBlock.FromBytes(imageBytes, "image/png");
+        var message = new Message("user", new List<ContentBlock> {
+            new TextContentBlock("What color is this image?"),
+            imageBlock
+        });
+
+        var request = new MessageRequest(AnthropicModels.Claude3Sonnet, [message]);
+        
+        await AnsiConsole.Status()
+            .StartAsync("Analyzing image...", async ctx =>
+            {
+                var response = await client.MessageAsync(request);
+                var responseText = response.Content.OfType<TextContentBlock>().First().Text;
+                AnsiConsole.MarkupLine($"[blue]Claude:[/] {responseText}");
+            });
     }
 }

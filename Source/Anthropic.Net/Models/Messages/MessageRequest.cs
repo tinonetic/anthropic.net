@@ -73,13 +73,19 @@ public class MessageRequest
     /// Gets or sets a value indicating whether to stream the response.
     /// </summary>
     [JsonPropertyName("stream")]
-    public bool? Stream { get; set; }
+    public bool Stream { get; set; }
 
     /// <summary>
     /// Gets or sets the tools available to the model.
     /// </summary>
     [JsonPropertyName("tools")]
-    public IList<Tool>? Tools { get; set; }
+    public List<Tool>? Tools { get; set; }
+
+    /// <summary>
+    /// Gets or sets the tool choice.
+    /// </summary>
+    [JsonPropertyName("tool_choice")]
+    public object? ToolChoice { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to return JSON.
