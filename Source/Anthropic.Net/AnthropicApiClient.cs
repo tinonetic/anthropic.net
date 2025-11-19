@@ -5,11 +5,15 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Anthropic.Net.Models.Messages;
+using Anthropic.Net.Models.Messages.Streaming;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// The Anthropic API client.
 /// </summary>
-public class AnthropicApiClient : IAnthropicApiClient
+public class AnthropicApiClient : IAnthropicApiClient, IDisposable
 {
     /// <summary>
     /// The injected HttpClientFactory objects object to be used to create the HttpClient.
@@ -17,56 +21,56 @@ public class AnthropicApiClient : IAnthropicApiClient
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly string? _apiKey;
     private readonly string _apiBaseUrl;
+    private readonly ServiceProvider? _internalServiceProvider;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class.
+    /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class with internal HttpClient management.
     /// </summary>
     /// <param name="apiKey">The Anthropic API key.</param>
     /// <param name="apiBaseUrl">The Anthropic API Base URL.</param>
-    /// <param name="httpClientFactory">
-    /// The HttpClientFactory object that creates the HttpClient used to make requests.
-    /// HttpClient should be initialized with the API key and Base URL. See example.
-    /// </param>
-    /// <remarks>
-    /// The <paramref name="httpClientFactory"/> parameter is recommended to be injected via .NET dependency injection.
-    /// Avoid using use "new HttpClient()".
-    /// For more information, look at the Examples from the <a href="https://github.com/tinonetic/anthropic.net">Anthropic.Net repository</a> and for details see <a href="https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests">Use IHttpClientFactory to implement resilient HTTP requests</a>.
-    /// </remarks>
-    public AnthropicApiClient(string apiKey, IHttpClientFactory httpClientFactory, string apiBaseUrl = "https://api.anthropic.com")
+    public AnthropicApiClient(string apiKey, string apiBaseUrl = "https://api.anthropic.com")
     {
-        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new ArgumentNullException(nameof(apiKey), "Please provide the Anthropic API key.");
+        }
+
         if (string.IsNullOrWhiteSpace(apiBaseUrl))
         {
-            throw new ArgumentNullException(nameof(apiBaseUrl), "Please assign the 'apiBaseUrl");
+            throw new ArgumentNullException(nameof(apiBaseUrl), "Please assign the 'apiBaseUrl'.");
         }
 
         _apiKey = apiKey;
         _apiBaseUrl = apiBaseUrl;
+
+        // Bootstrap internal ServiceProvider to get IHttpClientFactory
+        var services = new ServiceCollection();
+        services.AddHttpClient();
+        _internalServiceProvider = services.BuildServiceProvider();
+        _httpClientFactory = _internalServiceProvider.GetRequiredService<IHttpClientFactory>();
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class.
+    /// Initializes a new instance of the <see cref="AnthropicApiClient"/> class with an injected IHttpClientFactory.
     /// </summary>
     /// <param name="apiKey">The Anthropic API key.</param>
-    /// <param name="httpClientFactory">
-    /// The HttpClientFactory object that creates the HttpClient used to make requests.
-    /// HttpClient should be initialized with the API key and Base URL. See example.
-    /// </param>
-    /// <remarks>
-    /// The <paramref name="httpClientFactory"/> parameter is recommended to be injected via .NET dependency injection.
-    /// Avoid using use "new HttpClient()".
-    /// For more information, look at the Examples from the <a href="https://github.com/tinonetic/anthropic.net">Anthropic.Net repository</a> and for details see <a href="https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests">Use IHttpClientFactory to implement resilient HTTP requests</a>.
-    /// </remarks>
-    public AnthropicApiClient(string apiKey, IHttpClientFactory httpClientFactory)
+    /// <param name="httpClientFactory">The injected HttpClientFactory.</param>
+    /// <param name="apiBaseUrl">The Anthropic API Base URL.</param>
+    public AnthropicApiClient(string apiKey, IHttpClientFactory httpClientFactory, string apiBaseUrl = "https://api.anthropic.com")
     {
-        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory), "Please instantiate you HttpClient. Recommended to use HttpClientFactory. See example projects.");
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            throw new ArgumentNullException(nameof(apiKey), "Please provide the Anthropic API key. See the API Reference for details: https://console.anthropic.com/docs/api/reference");
+            throw new ArgumentNullException(nameof(apiKey), "Please provide the Anthropic API key.");
+        }
+
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+        {
+            throw new ArgumentNullException(nameof(apiBaseUrl), "Please assign the 'apiBaseUrl'.");
         }
 
         _apiKey = apiKey;
-        _apiBaseUrl = "https://api.anthropic.com";
+        _apiBaseUrl = apiBaseUrl;
     }
 
     /// <summary>
@@ -248,5 +252,89 @@ public class AnthropicApiClient : IAnthropicApiClient
         {
             throw new ArgumentException("The 'request.MaxTokens' parameter must be greater than zero.", nameof(request));
         }
+    }
+    /// <inheritdoc/>
+    public async IAsyncEnumerable<MessageStreamEvent> StreamMessageAsync(MessageRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ValidateMessageRequest(request);
+
+        request.Stream = true;
+
+        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/v1/messages");
+        httpRequestMessage.Headers.Accept.Clear();
+        httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+        httpRequestMessage.Headers.Add("anthropic-version", "2023-06-01");
+        httpRequestMessage.Headers.Add("x-api-key", _apiKey);
+
+        var jsonPayload = JsonSerializer.Serialize(request);
+        httpRequestMessage.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+        var httpClient = _httpClientFactory.CreateClient();
+        using var response = await httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            throw new AnthropicApiException($"Request failed with status code {response.StatusCode}: {errorContent}");
+        }
+
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        using var reader = new StreamReader(stream);
+
+        string? currentEvent = null;
+
+        while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
+        {
+            var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                continue;
+            }
+
+            if (line.StartsWith("event:", StringComparison.OrdinalIgnoreCase))
+            {
+                currentEvent = line["event:".Length..].Trim();
+            }
+            else if (line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                var data = line["data:".Length..].Trim();
+                if (currentEvent != null)
+                {
+                    MessageStreamEvent? streamEvent = null;
+                    try
+                    {
+                        streamEvent = currentEvent switch
+                        {
+                            "message_start" => JsonSerializer.Deserialize<MessageStartEvent>(data),
+                            "content_block_start" => JsonSerializer.Deserialize<ContentBlockStartEvent>(data),
+                            "content_block_delta" => JsonSerializer.Deserialize<ContentBlockDeltaEvent>(data),
+                            "content_block_stop" => JsonSerializer.Deserialize<ContentBlockStopEvent>(data),
+                            "message_delta" => JsonSerializer.Deserialize<MessageDeltaEvent>(data),
+                            "message_stop" => JsonSerializer.Deserialize<MessageStopEvent>(data),
+                            "ping" => JsonSerializer.Deserialize<PingEvent>(data),
+                            "error" => JsonSerializer.Deserialize<ErrorEvent>(data),
+                            _ => null
+                        };
+                    }
+                    catch (JsonException)
+                    {
+                        // Ignore deserialization errors for now or log them
+                    }
+
+                    if (streamEvent != null)
+                    {
+                        streamEvent.Type = currentEvent;
+                        yield return streamEvent;
+                    }
+                }
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        _internalServiceProvider?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
