@@ -11,3 +11,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1101:Prefix local calls with this", Justification = "Preferred convention", Scope = "module")]
 [assembly: SuppressMessage("Style", "IDE0022:Use expression body for method", Justification = "Preferred convention", Scope = "module")]
 [assembly: SuppressMessage("Style", "IDE0021:Use expression body for constructor", Justification = "Preferred convention", Scope = "module")]
+[assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "<Pending>", Scope = "member", Target = "~M:Anthropic.Net.Test.MockHttpMessageHandler.#ctor(System.String,System.Net.HttpStatusCode)")]

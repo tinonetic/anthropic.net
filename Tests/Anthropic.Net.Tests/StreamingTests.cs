@@ -4,6 +4,7 @@ using System.Net;
 using Anthropic.Net.Constants;
 using Anthropic.Net.Models.Messages;
 using Anthropic.Net.Models.Messages.Streaming;
+using Anthropic.Net.Models.Messages.Streaming.StreamingEvents;
 using NSubstitute;
 using Shouldly;
 using Xunit;

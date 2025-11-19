@@ -19,7 +19,7 @@ public class CompletionRequest
     {
         Model = model;
         MaxTokensToSample = maxTokensToSample;
-        StopSequences = new List<string>() { "\\n\\nHuman:" };
+        StopSequences = ["\\n\\nHuman:"];
         Stream = false;
         Temperature = 1;
         TopK = -1;

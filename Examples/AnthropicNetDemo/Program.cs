@@ -1,12 +1,10 @@
 using Anthropic.Net;
 using Anthropic.Net.Constants;
 using Anthropic.Net.Models.Messages;
-using Anthropic.Net.Models.Messages.Streaming;
+using Anthropic.Net.Models.Messages.Streaming.StreamingEvents;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Spectre.Console;
-using System.Text;
 
 namespace AnthropicNetDemo;
 
@@ -89,7 +87,8 @@ class Program
         while (true)
         {
             var input = AnsiConsole.Ask<string>("[green]You:[/]");
-            if (input.ToLower() == "exit") break;
+            if (input.ToLower() == "exit")
+                break;
 
             messages.Add(Message.FromUser(input));
 
@@ -98,7 +97,7 @@ class Program
                 {
                     var request = new MessageRequest(AnthropicModels.Claude3Sonnet, messages);
                     var response = await client.MessageAsync(request);
-                    
+
                     var responseText = response.Content.OfType<TextContentBlock>().First().Text;
                     AnsiConsole.MarkupLine($"[blue]Claude:[/] {responseText}");
                     messages.Add(Message.FromAssistant(responseText));
@@ -110,9 +109,9 @@ class Program
     {
         AnsiConsole.MarkupLine("[bold yellow]--- Streaming Demo ---[/]");
         var input = AnsiConsole.Ask<string>("[green]Enter a prompt for streaming:[/]");
-        
+
         var request = new MessageRequest(AnthropicModels.Claude3Sonnet, [Message.FromUser(input)]);
-        
+
         AnsiConsole.Markup("[blue]Claude:[/] ");
         await foreach (var evt in client.StreamMessageAsync(request))
         {
@@ -127,7 +126,7 @@ class Program
     static async Task RunToolsAsync(AnthropicApiClient client)
     {
         AnsiConsole.MarkupLine("[bold yellow]--- Tools Demo ---[/]");
-        
+
         var tool = new Tool("get_weather", "Get weather for a location", new
         {
             type = "object",
@@ -146,15 +145,15 @@ class Program
 
         var userContent = (List<ContentBlock>)messages[0].Content;
         AnsiConsole.MarkupLine($"[green]User:[/] {userContent.OfType<TextContentBlock>().First().Text}");
-        
+
         var response = await client.MessageAsync(request);
-        
+
         if (response.StopReason == "tool_use")
         {
             var toolUse = response.Content.OfType<ToolUseContentBlock>().First();
             AnsiConsole.MarkupLine($"[yellow]Tool Use Requested:[/] {toolUse.Name}");
             AnsiConsole.MarkupLine($"[yellow]Input:[/] {System.Text.Json.JsonSerializer.Serialize(toolUse.Input)}");
-            
+
             // Simulate tool execution
             var result = "The weather in San Francisco is 65 degrees and sunny.";
             AnsiConsole.MarkupLine($"[cyan]Tool Result:[/] {result}");
@@ -164,7 +163,7 @@ class Program
 
             var followUpRequest = new MessageRequest(AnthropicModels.Claude3Sonnet, messages) { Tools = [tool] };
             var followUpResponse = await client.MessageAsync(followUpRequest);
-            
+
             var finalText = followUpResponse.Content.OfType<TextContentBlock>().First().Text;
             AnsiConsole.MarkupLine($"[blue]Claude:[/] {finalText}");
         }
@@ -178,7 +177,7 @@ class Program
         // Create a simple 1x1 red pixel PNG base64
         var redDotBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
         var imageBytes = Convert.FromBase64String(redDotBase64);
-        
+
         var imageBlock = ImageContentBlock.FromBytes(imageBytes, "image/png");
         var message = new Message("user", new List<ContentBlock> {
             new TextContentBlock("What color is this image?"),
@@ -186,7 +185,7 @@ class Program
         });
 
         var request = new MessageRequest(AnthropicModels.Claude3Sonnet, [message]);
-        
+
         await AnsiConsole.Status()
             .StartAsync("Analyzing image...", async ctx =>
             {

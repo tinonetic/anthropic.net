@@ -1,6 +1,7 @@
 namespace Anthropic.Net.Models.Messages.Streaming;
 
 using System.Text.Json.Serialization;
+using Anthropic.Net.Models.Messages.Streaming.StreamingEvents;
 
 /// <summary>
 /// Represents a base class for all streaming events.

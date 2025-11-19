@@ -2,19 +2,21 @@ namespace Anthropic.Net;
 
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using Anthropic.Net.Models.Messages;
 using Anthropic.Net.Models.Messages.Streaming;
+using Anthropic.Net.Models.Messages.Streaming.StreamingEvents;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using System.Runtime.CompilerServices;
 
 /// <summary>
 /// The Anthropic API client.
 /// </summary>
 public class AnthropicApiClient : IAnthropicApiClient, IDisposable
 {
+    private bool _disposed;
+
     /// <summary>
     /// The injected HttpClientFactory objects object to be used to create the HttpClient.
     /// </summary>
@@ -313,7 +315,7 @@ public class AnthropicApiClient : IAnthropicApiClient, IDisposable
                             "message_stop" => JsonSerializer.Deserialize<MessageStopEvent>(data),
                             "ping" => JsonSerializer.Deserialize<PingEvent>(data),
                             "error" => JsonSerializer.Deserialize<ErrorEvent>(data),
-                            _ => null
+                            _ => null,
                         };
                     }
                     catch (JsonException)
@@ -331,10 +333,28 @@ public class AnthropicApiClient : IAnthropicApiClient, IDisposable
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Releases the allocated resources.
+    /// </summary>
     public void Dispose()
     {
-        _internalServiceProvider?.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the AnthropicApiClient and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _internalServiceProvider?.Dispose();
+            }
+            _disposed = true;
+        }
     }
 }

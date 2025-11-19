@@ -26,8 +26,5 @@ public class ResponseFormat
     /// Creates a JSON response format.
     /// </summary>
     /// <returns>A new ResponseFormat configured for JSON output.</returns>
-    public static ResponseFormat Json()
-    {
-        return new ResponseFormat("json");
-    }
+    public static ResponseFormat Json() => new("json");
 }

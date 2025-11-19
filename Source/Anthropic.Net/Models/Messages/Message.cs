@@ -9,6 +9,18 @@ using System.Text.Json.Serialization;
 public class Message
 {
     /// <summary>
+    /// Gets or sets the role of the message sender.
+    /// </summary>
+    [JsonPropertyName("role")]
+    public string Role { get; set; }
+
+    /// <summary>
+    /// Gets or sets the content of the message.
+    /// </summary>
+    [JsonPropertyName("content")]
+    public object Content { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="Message"/> class.
     /// </summary>
     /// <param name="role">The role of the message sender (user or assistant).</param>
@@ -24,30 +36,12 @@ public class Message
     /// </summary>
     /// <param name="text">The text content of the message.</param>
     /// <returns>A new user message.</returns>
-    public static Message FromUser(string text)
-    {
-        return new Message("user", new List<ContentBlock> { new TextContentBlock(text) });
-    }
+    public static Message FromUser(string text) => new("user", new List<ContentBlock> { new TextContentBlock(text) });
 
     /// <summary>
     /// Creates a new assistant message with text content.
     /// </summary>
     /// <param name="text">The text content of the message.</param>
     /// <returns>A new assistant message.</returns>
-    public static Message FromAssistant(string text)
-    {
-        return new Message("assistant", new List<ContentBlock> { new TextContentBlock(text) });
-    }
-
-    /// <summary>
-    /// Gets or sets the role of the message sender.
-    /// </summary>
-    [JsonPropertyName("role")]
-    public string Role { get; set; }
-
-    /// <summary>
-    /// Gets or sets the content of the message.
-    /// </summary>
-    [JsonPropertyName("content")]
-    public object Content { get; set; }
+    public static Message FromAssistant(string text) => new("assistant", new List<ContentBlock> { new TextContentBlock(text) });
 }
