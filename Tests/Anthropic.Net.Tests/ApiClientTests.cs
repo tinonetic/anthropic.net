@@ -71,7 +71,7 @@ public class ApiClientTests
 
         // Act
         var messages = new List<Message> { Message.FromUser("Hello, Claude!") };
-        var response = await sut.MessageAsync(new MessageRequest(AnthropicModels.Claude_3_Sonnet, messages))
+        var response = await sut.MessageAsync(new MessageRequest(AnthropicModels.Claude3Sonnet, messages))
             .ConfigureAwait(true);
 
         // Assert
