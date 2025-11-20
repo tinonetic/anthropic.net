@@ -7,7 +7,7 @@ using Anthropic.Net.Models.Messages.Streaming;
 /// <summary>
 /// The Anthropic API client interface.
 /// </summary>
-internal interface IAnthropicApiClient
+public interface IAnthropicApiClient
 {
     /// <summary>
     /// Sends a prompt to the Anthropic API for completion.
