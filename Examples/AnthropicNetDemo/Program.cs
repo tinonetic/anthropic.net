@@ -19,7 +19,7 @@ class Program
 
         // 2. Setup Spectre.Console
         AnsiConsole.Write(
-            new FigletText("Anthropic.Net")
+            new FigletText("tinonetic.Anthropic")
                 .LeftJustified()
                 .Color(Color.Teal));
         AnsiConsole.MarkupLine("[bold teal]v2.0 Demo Application[/]");
@@ -73,7 +73,7 @@ class Program
             Console.ReadKey(true);
             AnsiConsole.Clear();
             AnsiConsole.Write(
-                new FigletText("Anthropic.Net")
+                new FigletText("tinonetic.Anthropic")
                     .LeftJustified()
                     .Color(Color.Teal));
         }
