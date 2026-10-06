@@ -1,6 +1,11 @@
 # Anthropic.NET
 
-![Tinonetic.Anthropic Logo](assets/logo.png)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.png">
+    <img alt="Anthropic.NET - community .NET SDK for Claude" src="assets/logo.png" width="300">
+  </picture>
+</p>
 
 [![anthropic_net NuGet Package](https://img.shields.io/nuget/v/anthropic.net.svg)](https://www.nuget.org/packages/anthropic.net/) [![anthropic_net NuGet Package Downloads](https://img.shields.io/nuget/dt/anthropic.net)](https://www.nuget.org/packages/anthropic.net) [![GitHub Actions Status](https://github.com/tinonetic/anthropic.net/workflows/Build/badge.svg?branch=main)](https://github.com/tinonetic/anthropic.net/actions)
 

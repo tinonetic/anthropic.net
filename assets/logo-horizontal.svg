@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 235" width="1140" height="235" role="img" aria-label="Anthropic.NET - community .NET SDK for Claude">
+  <style>@media (prefers-color-scheme: dark){.t{fill:#F8FAFC}.s{fill:#94A3B8}}</style>
+  <g transform="translate(24 19) scale(0.38)">
+    <defs>
+      <linearGradient id="c-g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#14B8A6"/><stop offset="1" stop-color="#4F46E5"/>
+      </linearGradient>
+    </defs>
+    <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#c-g)"/>
+    <rect x="92" y="112" width="328" height="224" rx="68" fill="#fff"/>
+    <polygon points="132,322 132,404 222,332" fill="#fff" stroke="#fff" stroke-width="10" stroke-linejoin="round"/>
+    <polyline points="200,172 152,224 200,276" fill="none" stroke="#312E81" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="312,172 360,224 312,276" fill="none" stroke="#312E81" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+    <polygon points="310.0,224.0 309.4,224.0 307.6,224.3 304.7,224.9 300.8,226.2 296.2,228.1 291.1,230.8 285.7,234.2 280.3,238.3 275.1,243.1 270.3,248.3 266.2,253.7 262.8,259.1 260.1,264.2 258.2,268.8 256.9,272.7 256.3,275.6 256.0,277.4 256.0,278.0 256.0,277.4 255.7,275.6 255.1,272.7 253.8,268.8 251.9,264.2 249.2,259.1 245.8,253.7 241.7,248.3 236.9,243.1 231.7,238.3 226.3,234.2 220.9,230.8 215.8,228.1 211.2,226.2 207.3,224.9 204.4,224.3 202.6,224.0 202.0,224.0 202.6,224.0 204.4,223.7 207.3,223.1 211.2,221.8 215.8,219.9 220.9,217.2 226.3,213.8 231.7,209.7 236.9,204.9 241.7,199.7 245.8,194.3 249.2,188.9 251.9,183.8 253.8,179.2 255.1,175.3 255.7,172.4 256.0,170.6 256.0,170.0 256.0,170.6 256.3,172.4 256.9,175.3 258.2,179.2 260.1,183.8 262.8,188.9 266.2,194.3 270.3,199.7 275.1,204.9 280.3,209.7 285.7,213.8 291.1,217.2 296.2,219.9 300.8,221.8 304.7,223.1 307.6,223.7 309.4,224.0" fill="#0EA5A4"/>
+  </g>
+  <text x="250" y="130" font-family="'Segoe UI','Inter','Helvetica Neue',Arial,sans-serif" class="t" font-weight="700" font-size="86" fill="#0F172A">Anthropic<tspan fill="#4F46E5">.NET</tspan></text>
+  <text x="254" y="180" font-family="'Segoe UI','Inter','Helvetica Neue',Arial,sans-serif" class="s" font-size="34" fill="#64748B">community .NET SDK for Claude</text>
+</svg>
