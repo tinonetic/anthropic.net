@@ -18,8 +18,8 @@ using Anthropic.Net.Models.Messages.Streaming.StreamingEvents;
 public abstract class MessageStreamEvent
 {
     /// <summary>
-    /// Gets or sets the type of the event.
+    /// Gets or sets the type of the event (set by the client from the SSE stream).
     /// </summary>
-    [JsonPropertyName("type")]
+    [JsonIgnore]
     public string Type { get; set; } = string.Empty;
 }
