@@ -1,5 +1,6 @@
 namespace Anthropic.Net.Models.Messages;
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 /// <summary>
@@ -22,4 +23,16 @@ public class TextContentBlock : ContentBlock
     /// </summary>
     [JsonPropertyName("text")]
     public string Text { get; set; }
+
+    /// <summary>
+    /// Gets or sets the prompt-caching breakpoint.
+    /// </summary>
+    [JsonPropertyName("cache_control")]
+    public CacheControl? CacheControl { get; set; }
+
+    /// <summary>
+    /// Gets or sets citations attached to this text (response only; raw because location shapes vary by source type).
+    /// </summary>
+    [JsonPropertyName("citations")]
+    public List<JsonElement>? Citations { get; set; }
 }

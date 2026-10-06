@@ -73,7 +73,7 @@ public class ApiClientTests
 
         // Act
         var messages = new List<Message> { Message.FromUser("Hello, Claude!") };
-        var response = await sut.MessageAsync(new MessageRequest(AnthropicModels.Claude3Sonnet, messages))
+        var response = await sut.MessageAsync(new MessageRequest(AnthropicModels.ClaudeSonnet55, messages))
             .ConfigureAwait(true);
 
         // Assert
@@ -121,7 +121,7 @@ public class ApiClientTests
         // Act
         var messages = new List<Message> { Message.FromUser("Hello") };
         var events = new List<MessageStreamEvent>();
-        await foreach (var ev in sut.StreamMessageAsync(new MessageRequest(AnthropicModels.Claude3Sonnet, messages)))
+        await foreach (var ev in sut.StreamMessageAsync(new MessageRequest(AnthropicModels.ClaudeSonnet55, messages)))
         {
             events.Add(ev);
         }

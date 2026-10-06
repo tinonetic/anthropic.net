@@ -26,6 +26,12 @@ public class ImageContentBlock : ContentBlock
     public ImageSource Source { get; set; }
 
     /// <summary>
+    /// Gets or sets the prompt-caching breakpoint.
+    /// </summary>
+    [JsonPropertyName("cache_control")]
+    public CacheControl? CacheControl { get; set; }
+
+    /// <summary>
     /// Creates an <see cref="ImageContentBlock"/> from a byte array.
     /// </summary>
     /// <param name="bytes">The image data.</param>
@@ -36,6 +42,20 @@ public class ImageContentBlock : ContentBlock
         var base64Data = Convert.ToBase64String(bytes);
         return new ImageContentBlock(new ImageSource("base64", mediaType, base64Data));
     }
+
+    /// <summary>
+    /// Creates an <see cref="ImageContentBlock"/> referencing a public URL.
+    /// </summary>
+    /// <param name="url">The image URL.</param>
+    /// <returns>A new <see cref="ImageContentBlock"/> instance.</returns>
+    public static ImageContentBlock FromUrl(string url) => new(ImageSource.FromUrl(url));
+
+    /// <summary>
+    /// Creates an <see cref="ImageContentBlock"/> referencing a Files API upload.
+    /// </summary>
+    /// <param name="fileId">The file id.</param>
+    /// <returns>A new <see cref="ImageContentBlock"/> instance.</returns>
+    public static ImageContentBlock FromFileId(string fileId) => new(ImageSource.FromFileId(fileId));
 
     /// <summary>
     /// Creates an <see cref="ImageContentBlock"/> from a file path.
@@ -55,7 +75,7 @@ public class ImageContentBlock : ContentBlock
                 ".png" => "image/png",
                 ".gif" => "image/gif",
                 ".webp" => "image/webp",
-                _ => "application/octet-stream"
+                _ => "application/octet-stream",
             };
         }
 
