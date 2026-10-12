@@ -6,7 +6,7 @@
     <!-- Core packages -->
     <PackageVersion Include="System.Text.Json" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     
     <!-- Test packages -->
